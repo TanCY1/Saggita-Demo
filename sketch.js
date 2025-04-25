@@ -4,6 +4,7 @@ const PHI = (1 + Math.sqrt(5)) / 2; // Golden ratio
 
 
 function setup() {
+  console.log(color(45))
   createCanvas(windowWidth, windowHeight);
 
   angleSlider = createSlider(
@@ -254,7 +255,7 @@ class ArcDiagram {
   }
 
   _drawLabels() {
-    fill(30);
+    fill(45);
     noStroke();
     textSize(20);
     textAlign(LEFT);
