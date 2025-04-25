@@ -2,6 +2,7 @@ let angleSlider, arcDiagram;
 const arcLength = 1000; // Fixed arc length in pixels
 const PHI = (1 + Math.sqrt(5)) / 2; // Golden ratio
 
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
@@ -9,7 +10,7 @@ function setup() {
     arcLength / (windowHeight * 0.65),
     arcLength / (windowHeight * 0.2),
     PI,
-    0.1
+    PI/180,
   );
   angleSlider.position(10, 10);
 
@@ -18,7 +19,7 @@ function setup() {
 
 function draw() {
   background(100);
-  arcDiagram.update(angleSlider.value());
+  arcDiagram.updateValues(angleSlider.value());
   arcDiagram.display();
 }
 
@@ -36,7 +37,7 @@ class ArcDiagram {
     this.updateDimensions();
   }
 
-  update(angle) {
+  updateValues(angle) {
     this.angle = angle;
     this.radius = this.arcLength / angle;
 
@@ -52,20 +53,20 @@ class ArcDiagram {
     };
 
     this.offset = this.radius * (PHI / 100);
-    this.p1 = this._getPointOnArc(this.startAngle);
-    this.p2 = this._getPointOnArc(this.endAngle);
+    this.p1 = this._getPointOnArc(this.startAngle); //end point on the arc
+    this.p2 = this._getPointOnArc(this.endAngle); // end point on the arc
 
-    this.midpoint = this._getMidpoint(this.p1, this.p2);
-    this.bottomPoint = {
+    this.midpoint = this._getMidpoint(this.p1, this.p2); //midpoint of chord
+    this.bottom = {
       x: width / 2,
-      y: height / 2 + height * 0.1875,
-    };
+      y: height / 2 + height * 0.183,
+    }; //bottom point of arc
 
     this.chordLength = dist(this.p1.x, this.p1.y, this.p2.x, this.p2.y);
   }
 
   resize() {
-    this.update(this.angle);
+    this.updateValues(this.angle);
   }
 
   display() {
@@ -76,6 +77,7 @@ class ArcDiagram {
     this._drawLabels();
     this._drawRadius();
     this._drawArcCenterToMidpoint();
+    this._drawHalfChord();
   }
 
   _getPointOnArc(angle) {
@@ -121,8 +123,26 @@ class ArcDiagram {
     noStroke();
     textSize(16);
     textAlign(CENTER, BOTTOM);
-    text("l = " + str(round((this.p1.x - this.p2.x) / 100, 2)), this.midpoint.x+width/50, this.midpoint.y - 15);
+    text("l = " + str(round((this.p1.x - this.p2.x) / 100, 2)), this.midpoint.x-width/40, this.midpoint.y - 15);
   }
+
+  _drawHalfChord() {
+    stroke(255,0,255);
+    strokeWeight(2);
+    this._drawDoubleArrow(this.p1.x, this.p1.y-height/75, this.midpoint.x, this.midpoint.y-height/75, 10, color(255, 0, 255));
+    
+    let halfl = round(this.chordLength/200,2);
+      let formula = '\\frac{l}{2}='+halfl;
+      let divhalfl = document.getElementById("l/2");
+      if (window.katex) {
+        katex.render(formula, divhalfl);
+        divhalfl.style.left = `${(this.p1.x + this.midpoint.x) / 2}px`
+        divhalfl.style.transform = 'translateX(-50%)';
+        divhalfl.style.top = `${(this.p1.y + this.midpoint.y) / 2-height/20}px`
+        divhalfl.style.fontSize='14px';
+        divhalfl.style.color = color(255, 0, 255);
+      }
+    }
 
   _drawArrowhead(x, y, angle, size, lineColor) {
     push();
@@ -150,22 +170,19 @@ class ArcDiagram {
   }
 
   _drawPerpendicularLine() {
-    this.midChord = createVector((this.p1.x + this.p2.x) / 2, (this.p1.y + this.p2.y) / 2);
-    this.bottom = createVector(width / 2, height / 2 + height * 0.1875); // bottom point of the arc
-
     let lineColor = color(200, 0, 0); // Define the color for the line (same as before)
 
     // Calculate angle between midChord and bottom
-    let angle = atan2(this.bottom.y - this.midChord.y, this.bottom.x - this.midChord.x);
-    this._drawDoubleArrow(this.midChord.x, this.midChord.y, this.bottom.x, this.bottom.y, 10, lineColor);
+    let angle = atan2(this.bottom.y - this.midpoint.y, this.bottom.x - this.midpoint.x);
+    this._drawDoubleArrow(this.midpoint.x, this.midpoint.y, this.bottom.x, this.bottom.y, 10, lineColor);
 
     // Midpoint of the line
-    let midX = (this.midChord.x + this.bottom.x) / 2;
-    let midY = (this.midChord.y + this.bottom.y) / 2;
+    let midX = (this.midpoint.x + this.bottom.x) / 2;
+    let midY = (this.midpoint.y + this.bottom.y) / 2;
 
     // Calculate direction vector
-    let dx = this.bottom.x - this.midChord.x;
-    let dy = this.bottom.y - this.midChord.y;
+    let dx = this.bottom.x - this.midpoint.x;
+    let dy = this.bottom.y - this.midpoint.y;
 
     // Normalize direction vector
     let mag = sqrt(dx * dx + dy * dy);
@@ -182,7 +199,7 @@ class ArcDiagram {
     noStroke();
     textAlign(LEFT, CENTER);
     textSize(14);
-    text("s = " + round(dist(this.midChord.x, this.midChord.y, this.bottom.x, this.bottom.y) / 100, 1), 0, 0);
+    text("s = " + round(dist(this.midpoint.x, this.midpoint.y, this.bottom.x, this.bottom.y) / 100, 1), 0, 0);
     pop();
   }
 
@@ -225,7 +242,7 @@ class ArcDiagram {
     noStroke();
     fill(0, 255, 100);
     textSize(14);
-    text("s - r = " + round(dist(this.arcCenter.x, this.arcCenter.y, this.midpoint.x, this.midpoint.y) / 100, 1), -width/37, 0);
+    text("|s - r| = " + round(dist(this.arcCenter.x, this.arcCenter.y, this.midpoint.x, this.midpoint.y) / 100, 1), -width/37, 0);
     pop();
 }
 
@@ -239,9 +256,39 @@ class ArcDiagram {
   _drawLabels() {
     fill(30);
     noStroke();
-    textSize(14);
+    textSize(20);
     textAlign(LEFT);
-    text(`Angle: ${(this.angle * 180 / PI).toFixed(0)}°`, 10, 50);
+    text(`Angle: ${(this.angle * 180 / PI).toFixed(0)}°`, 20, 60);
+    let r = (dist(this.arcCenter.x, this.arcCenter.y, this.p1.x, this.p1.y)/100).toFixed(1)
+    text(`r = ${r}`,20,90)
+    let s =(dist(this.midpoint.x, this.midpoint.y, this.bottom.x, this.bottom.y)/100).toFixed(2)
+    text(`s = ${s}`,20,120)
+    let l =(dist(this.p1.x, this.p1.y, this.p2.x, this.p2.y)/100).toFixed(2)
+    text(`l = ${l}`,20,150)
+    let abs_s_minus_r = round(dist(this.arcCenter.x, this.arcCenter.y, this.midpoint.x, this.midpoint.y) / 100,1)
+    text(`|s - r| = ${abs_s_minus_r}` ,20,180)
+    let halfl = round(this.chordLength/200,2);
+    let formula = '\\frac{l}{2}='+halfl;
+    let divhalfl2 = document.getElementById("l/2 2");
+    if (window.katex) {
+      katex.render(formula, divhalfl2);
+      divhalfl2.style.fontSize='18px';
+    }
+
+    formula = `\\begin{aligned}
+                r&=\\sqrt{(\\frac{l}{2})^{2}+|s-r|^{2}}\\\\
+                  &=\\sqrt{(\\frac{${l}}{2})^{2}+|${s}-${r}|^{2}}\\\\
+                  &=\\sqrt{${round(l/2,2)}^{2}+|${abs_s_minus_r}|^{2}}\\\\
+                  &=\\sqrt{${round((l/2)**2,2)}+${round(abs_s_minus_r**2,2)}}\\\\
+                  &=\\sqrt{${round((l/2)**2+abs_s_minus_r**2,2)}}\\\\
+                  &\\approx${round(sqrt((l/2)**2+abs_s_minus_r**2),1)}
+                  \\end{aligned}`;
+    let divr = document.getElementById("r");
+    if (window.katex) {
+      katex.render(formula, divr);
+      divr.style.fontSize='16px';
+    }
+
     //text(`Radius: ${this.radius.toFixed(1)} px`, 10, 70);
     //text(`Arc Length: ${this.arcLength} px`, 10, 90);
     //text(`Chord Length: ${this.chordLength.toFixed(1)} px`, 10, 110);
