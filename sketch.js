@@ -279,9 +279,9 @@ class ArcDiagram {
     formula = `\\begin{aligned}
                 r&=\\sqrt{(\\frac{l}{2})^{2}+|s-r|^{2}}\\\\
                   &=\\sqrt{(\\frac{${l}}{2})^{2}+|${s}-${r}|^{2}}\\\\
-                  &=\\sqrt{${round(l/2,2)}^{2}+|${abs_s_minus_r}|^{2}}\\\\
-                  &=\\sqrt{${round((l/2)**2,2)}+${round(abs_s_minus_r**2,2)}}\\\\
-                  &=\\sqrt{${round((l/2)**2+abs_s_minus_r**2,2)}}\\\\
+                  &\\approx\\sqrt{${round(l/2,2)}^{2}+|${abs_s_minus_r}|^{2}}\\\\
+                  &\\approx\\sqrt{${round((l/2)**2,2)}+${round(abs_s_minus_r**2,2)}}\\\\
+                  &\\approx\\sqrt{${round((l/2)**2+abs_s_minus_r**2,2)}}\\\\
                   &\\approx${round(sqrt((l/2)**2+abs_s_minus_r**2),1)}
                   \\end{aligned}`;
     let divr = document.getElementById("r");
